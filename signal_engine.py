@@ -26,14 +26,21 @@ class SignalEngine:
 
     def add_candle(self, candle: Dict) -> None:
         """Add a new 1-minute candle to the buffer."""
-        self.candles.append({
-            'timestamp': candle.get('t'),
-            'open': float(candle.get('o')),
-            'high': float(candle.get('h')),
-            'low': float(candle.get('l')),
-            'close': float(candle.get('c')),
-            'volume': float(candle.get('v')),
-        })
+        open_val = candle.get('open') or candle.get('o')
+        high_val = candle.get('high') or candle.get('h')
+        low_val = candle.get('low') or candle.get('l')
+        close_val = candle.get('close') or candle.get('c')
+        volume_val = candle.get('volume') or candle.get('v') or 0
+
+        if open_val and high_val and low_val and close_val:
+            self.candles.append({
+                'timestamp': candle.get('timestamp') or candle.get('t'),
+                'open': float(open_val),
+                'high': float(high_val),
+                'low': float(low_val),
+                'close': float(close_val),
+                'volume': float(volume_val),
+            })
 
         # Keep only last 100 candles (enough for MACD/RSI/EMA)
         if len(self.candles) > 100:
