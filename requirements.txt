@@ -1,5 +1,5 @@
-# Polymarket CLOB API
-py-clob-client>=0.4.0
+# Minimal requirements for dashboard testing
+# (without blockchain dependencies that require compilation)
 
 # Binance WebSocket & REST API
 python-binance>=1.0.0
@@ -12,10 +12,6 @@ ta>=0.10.0
 # HTTP & async
 requests>=2.28.0
 aiohttp>=3.8.0
-websockets>=9.1,<10
-
-# Blockchain & wallet signing
-web3>=5.20.0,<6.0.0
 
 # Environment variables
 python-dotenv>=1.0.0
