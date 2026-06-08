@@ -199,7 +199,7 @@ class WebServer:
         """Run Flask in background thread."""
         thread = threading.Thread(
             target=self.run,
-            kwargs={'host': '127.0.0.1', 'port': port, 'debug': False},
+            kwargs={'host': '0.0.0.0', 'port': port, 'debug': False},
             daemon=True
         )
         thread.start()

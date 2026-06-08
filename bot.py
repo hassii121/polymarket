@@ -1,7 +1,6 @@
 import logging
 import asyncio
 import time
-import webbrowser
 from datetime import datetime
 import config
 from signal_engine import SignalEngine
@@ -266,20 +265,9 @@ class PolymarketBot:
 
         try:
             # Start web server in background
-            logger.info("🌐 Starting web dashboard on http://localhost:5000")
-            self.web_server.run_async(port=5000)
-
-            # Open browser automatically after 2 seconds (give server time to start)
-            async def open_browser():
-                await asyncio.sleep(2)
-                try:
-                    webbrowser.open('http://localhost:5000')
-                    logger.info("🌐 Opening browser: http://localhost:5000")
-                except Exception as e:
-                    logger.warning(f"Could not open browser automatically: {e}")
-
-            # Run browser open in background (don't wait for it)
-            asyncio.create_task(open_browser())
+            logger.info("🌐 Dashboard running on http://0.0.0.0:8000")
+            logger.info("🌐 Access it at: http://127.0.0.1:8000")
+            self.web_server.run_async(port=8000)
 
             await self.main_loop()
         except KeyboardInterrupt:
