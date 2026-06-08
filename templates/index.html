@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEASERX PolyBot - Trading Terminal</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabler-icons@latest/tabler-icons.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-light: #ffffff;
+            --bg-gray: #f5f5f5;
+            --border: #e0e0e0;
+            --text-dark: #1a1a1a;
+            --text-muted: #666666;
+            --text-light: #999999;
+            --green: #1D9E75;
+            --red: #D85A30;
+            --amber: #E4A430;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .header-arrow {
+            color: var(--amber);
+            font-size: 20px;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background-color: #e8f5f1;
+            border-radius: 20px;
+            border: 1px solid #c0ede8;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--green);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-center span {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 20px 24px;
+            background-color: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            gap: 40px;
+        }
+
+        .stat-item {
+            padding: 0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--green);
+            font-family: 'Space Mono', monospace;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.amber {
+            color: var(--amber);
+        }
+
+        .stat-value.red {
+            color: var(--red);
+        }
+
+        .stat-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .container {
+            display: flex;
+            height: calc(100vh - 64px - 50px);
+            background-color: var(--bg-light);
+            padding: 20px 24px;
+            gap: 24px;
+            overflow: hidden;
+        }
+
+        .left-column {
+            flex: 1.3;
+            overflow-y: auto;
+            padding-right: 20px;
+        }
+
+        .right-column {
+            flex: 0.7;
+            overflow-y: auto;
+            padding-left: 20px;
+            border-left: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        /* Price Section */
+        .price-display {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .price-main {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .price-change {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #e8f5f1;
+            color: var(--green);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .price-change.red {
+            background-color: #f5e8e0;
+            color: var(--red);
+        }
+
+        /* Chart */
+        .chart-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            float: right;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            margin-bottom: 24px;
+            clear: both;
+        }
+
+        /* Signal Bars */
+        .signal-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .signal-bar:last-child {
+            border-bottom: none;
+        }
+
+        .signal-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            width: 120px;
+        }
+
+        .signal-progress {
+            flex: 1;
+            height: 8px;
+            background-color: var(--bg-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .signal-fill {
+            height: 100%;
+            background-color: var(--green);
+            transition: width 0.3s ease;
+        }
+
+        .signal-fill.amber {
+            background-color: var(--amber);
+        }
+
+        .signal-fill.red {
+            background-color: var(--red);
+        }
+
+        .signal-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-family: 'Space Mono', monospace;
+            width: 50px;
+            text-align: right;
+        }
+
+        /* ===== RIGHT COLUMN PANELS ===== */
+        .panel {
+            background-color: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Window Timer Panel */
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .timer-ring {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .timer-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .timer-text-small {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .timer-info {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 12px;
+        }
+
+        .direction-badge {
+            padding: 10px 12px;
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .direction-badge.up {
+            border-color: var(--green);
+            color: var(--green);
+            background-color: #e8f5f1;
+        }
+
+        .direction-badge.down {
+            border-color: var(--red);
+            color: var(--red);
+            background-color: #f5e8e0;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .score-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            color: var(--green);
+        }
+
+        .token-price {
+            font-size: 11px;
+            color: var(--text-light);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .token-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* Martingale Panel */
+        .stake-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stake-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stake-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stake-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--amber);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .level-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .level-bars {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .level-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .level-fill {
+            width: 100%;
+            height: 28px;
+            background-color: #e8e8e8;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+
+        .level-fill.active {
+            background-color: var(--amber);
+        }
+
+        .level-fill.completed {
+            background-color: var(--red);
+        }
+
+        .level-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Trade History */
+        .trades-pills {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .trade-pill {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            background-color: var(--bg-gray);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .trade-pill.win {
+            background-color: #e8f5f1;
+            color: var(--green);
+            border-color: var(--green);
+        }
+
+        .trade-pill.loss {
+            background-color: #f5e8e0;
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .trade-stats {
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dark);
+        }
+
+        .stat-row:nth-child(odd) {
+            border-right: 1px solid var(--border);
+            padding-right: 8px;
+        }
+
+        .stat-row:nth-child(even) {
+            padding-left: 8px;
+        }
+
+        .stat-row:nth-last-child(1),
+        .stat-row:nth-last-child(2) {
+            border-bottom: none;
+        }
+
+        .stat-row span:last-child {
+            color: var(--text-dark);
+            font-family: 'Space Mono', monospace;
+            font-weight: 600;
+        }
+
+        .stat-row span:last-child.green {
+            color: var(--green);
+        }
+
+        .stat-row span:last-child.amber {
+            color: var(--amber);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            background-color: var(--bg-light);
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+            height: 50px;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ===== SCROLLBARS ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            CEASERX <span class="header-arrow">▸</span> POLYBOT
+        </div>
+        <div class="header-center">
+            <div class="live-dot"></div>
+            <span>LIVE</span>
+        </div>
+        <div class="header-right">
+            <i class="ti ti-coin-bitcoin" style="width: 14px; height: 14px;"></i>
+            BTC / UP-DOWN 5M · Polygon USDC · <span id="clock" class="mono">00:00:00</span> P***
+        </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-label">BTC Price</div>
+            <div class="stat-value mono" id="btcPrice">$104,277</div>
+            <div class="stat-subtitle" id="btcChange">+$214 this window</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Session P&L</div>
+            <div class="stat-value mono" id="pnl">+$6.40</div>
+            <div class="stat-subtitle">3 wins · 2 losses</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value mono" id="winRate">60%</div>
+            <div class="stat-subtitle">12 trades today</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Wallet USDC</div>
+            <div class="stat-value mono amber" id="balance">$186.40</div>
+            <div class="stat-subtitle">Started $180.00</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+            <div style="margin-bottom: 16px;">
+                <div class="section-title">BTC / USDT — Live Feed (Binance)</div>
+                <div class="price-display">
+                    <div class="price-main mono">$104,277</div>
+                    <div class="price-change mono">△ +0.41%</div>
+                </div>
+            </div>
+
+            <div class="chart-label">1M CANDLES</div>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+
+            <!-- Signal Bars -->
+            <div style="margin-top: 20px;">
+                <div class="signal-bar">
+                    <div class="signal-label">RSI + MACD</div>
+                    <div class="signal-progress">
+                        <div class="signal-fill" style="width: 69%"></div>
+                    </div>
+                    <div class="signal-value mono">69</div>
+                </div>
+                <div class="signal-bar">
+                    <div class="signal-label">Funding Rate</div>
+                    <div class="signal-progress">
+                        <div class="signal-fill" style="width: 64%"></div>
+                    </div>
+                    <div class="signal-value mono">64</div>
+                </div>
+                <div class="signal-bar">
+                    <div class="signal-label">Fear & Greed</div>
+                    <div class="signal-progress">
+                        <div class="signal-fill amber" style="width: 45%"></div>
+                    </div>
+                    <div class="signal-value mono">45</div>
+                </div>
+                <div class="signal-bar">
+                    <div class="signal-label">Order Book</div>
+                    <div class="signal-progress">
+                        <div class="signal-fill" style="width: 79%"></div>
+                    </div>
+                    <div class="signal-value mono">79</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-column">
+            <!-- Window Timer -->
+            <div class="panel">
+                <div class="section-title">Window Timer</div>
+                <div class="timer-container">
+                    <div class="timer-ring">
+                        <svg class="timer-svg" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="43" fill="none" stroke="#e0e0e0" stroke-width="2"/>
+                            <circle id="timerArc" cx="50" cy="50" r="43" fill="none" stroke="#1D9E75" stroke-width="3"
+                                    stroke-dasharray="270" stroke-dashoffset="0"
+                                    style="transform: rotate(-90deg); transform-origin: 50px 50px; transition: stroke-dashoffset 1s linear, stroke 0.3s;"/>
+                        </svg>
+                        <div class="timer-text mono">
+                            <div id="timerText">2:19</div>
+                            <div class="timer-text-small">remaining</div>
+                        </div>
+                    </div>
+                    <div class="timer-info">
+                        <div class="direction-badge up" id="directionBadge">⏱ WAITING — SCORE LOW</div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div class="score-circle mono" id="scoreCircle">64</div>
+                            <div>
+                                <div class="token-price">Token</div>
+                                <div class="token-value mono">Φ0.55</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Martingale State -->
+            <div class="panel">
+                <div class="section-title">Martingale State</div>
+                <div class="stake-display">
+                    <div class="stake-section">
+                        <div class="stake-label">Current Stake</div>
+                        <div class="stake-amount mono">$2.00</div>
+                    </div>
+                    <div class="level-badge mono">Level<br>1 / 5</div>
+                </div>
+                <div class="level-bars">
+                    <div class="level-bar">
+                        <div class="level-fill active"></div>
+                        <div class="level-label mono">$2</div>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-fill"></div>
+                        <div class="level-label mono">$4</div>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-fill"></div>
+                        <div class="level-label mono">$8</div>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-fill"></div>
+                        <div class="level-label mono">$16</div>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-fill"></div>
+                        <div class="level-label mono">$32</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade History -->
+            <div class="panel">
+                <div class="section-title">Last 8 Trades</div>
+                <div class="trades-pills">
+                    <div class="trade-pill win">W</div>
+                    <div class="trade-pill win">W</div>
+                    <div class="trade-pill loss">L</div>
+                    <div class="trade-pill">—</div>
+                    <div class="trade-pill win">W</div>
+                    <div class="trade-pill loss">L</div>
+                    <div class="trade-pill win">W</div>
+                    <div class="trade-pill win">W</div>
+                </div>
+                <div class="trade-stats">
+                    <div class="stat-row">
+                        <span>Total In</span>
+                        <span>$18.00</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Total Out</span>
+                        <span class="green">$24.40</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Max Level</span>
+                        <span>L2 (2x)</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Skipped</span>
+                        <span class="amber">4 today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="footer-item">✓ Railway — Live</div>
+        <div class="footer-item">·</div>
+        <div class="footer-item">🔐 0x100–937P-BTC</div>
+        <div class="footer-item">·</div>
+        <div class="footer-item">Polygon WS 40-msg</div>
+        <div class="footer-item">·</div>
+        <div class="footer-item">Updated 0s ago</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize chart
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:41', '00:41', '00:42', '00:42', '00:42', '00:43'],
+                datasets: [{
+                    label: 'BTC/USDT',
+                    data: [104000, 104200, 104100, 104300, 104050, 104280],
+                    borderColor: '#1D9E75',
+                    backgroundColor: 'rgba(29, 158, 117, 0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {display: false},
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1a1a1a',
+                        bodyColor: '#1a1a1a',
+                        borderColor: '#e0e0e0',
+                        borderWidth: 1,
+                        padding: 10,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {color: '#999999', font: {family: "'Space Mono'", size: 11}, callback: function(v) { return '$' + (v/1000).toFixed(2) + 'K'; }},
+                        grid: {color: '#f0f0f0'},
+                    },
+                    x: {
+                        ticks: {color: '#999999', font: {family: "'Space Mono'", size: 11}},
+                        grid: {display: false},
+                    }
+                }
+            }
+        });
+
+        // Fetch real data from backend APIs
+        async function fetchAndUpdate() {
+            try {
+                // Fetch stats
+                const statsRes = await fetch('/api/stats');
+                const stats = await statsRes.json();
+
+                if (stats.signal_score !== undefined) {
+                    document.getElementById('btcPrice').textContent = '$' + (stats.signal_score * 1000 || 0).toFixed(0);
+                    document.getElementById('pnl').textContent = (stats.net_pnl >= 0 ? '+' : '') + '$' + (stats.net_pnl || 0).toFixed(2);
+                    document.getElementById('winRate').textContent = Math.round(stats.win_rate || 0) + '%';
+                    document.getElementById('balance').textContent = '$' + (stats.net_pnl + 186 || 186).toFixed(2);
+                }
+
+                // Fetch BTC price
+                const priceRes = await fetch('/api/btc/price');
+                const priceData = await priceRes.json();
+
+                if (priceData.current_price) {
+                    const price = priceData.current_price;
+                    document.getElementById('priceMain').textContent = '$' + price.toFixed(0);
+                    document.getElementById('btcPrice').textContent = '$' + price.toFixed(0);
+
+                    if (priceData.change_24h) {
+                        const change = priceData.change_24h.change_pct;
+                        const changeEl = document.getElementById('priceChangeGreen');
+                        changeEl.textContent = (change > 0 ? '△ +' : '▽ ') + change.toFixed(2) + '%';
+                        changeEl.className = change > 0 ? 'price-change mono' : 'price-change red mono';
+                    }
+                }
+
+                // Fetch window info
+                const windowRes = await fetch('/api/window-info');
+                const windowInfo = await windowRes.json();
+
+                if (windowInfo) {
+                    const minutes = Math.floor(windowInfo.countdown / 60);
+                    const seconds = windowInfo.countdown % 60;
+                    document.getElementById('timerText').textContent = minutes + ':' + String(seconds).padStart(2, '0');
+
+                    const circumference = 270;
+                    const offset = circumference * (windowInfo.percentage / 100);
+                    const arc = document.getElementById('timerArc');
+                    arc.style.strokeDashoffset = offset;
+
+                    if (windowInfo.countdown < 30) {
+                        arc.style.stroke = '#D85A30';
+                    } else if (windowInfo.countdown < 60) {
+                        arc.style.stroke = '#E4A430';
+                    } else {
+                        arc.style.stroke = '#1D9E75';
+                    }
+                }
+            } catch (e) {
+                console.error('API Error:', e);
+            }
+        }
+
+        // Clock update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+        }, 1000);
+
+        // Update data from APIs every 2 seconds
+        fetchAndUpdate();
+        setInterval(fetchAndUpdate, 2000);
+
+        console.log('✅ Dashboard loaded and connected to backend');
+    </script>
+</body>
+</html>
