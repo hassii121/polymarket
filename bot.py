@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import time
+import os
 from datetime import datetime
 import config
 from signal_engine import SignalEngine
@@ -265,9 +266,10 @@ class PolymarketBot:
 
         try:
             # Start web server in background
-            logger.info("🌐 Dashboard running on http://0.0.0.0:8000")
-            logger.info("🌐 Access it at: http://127.0.0.1:8000")
-            self.web_server.run_async(port=8000)
+            port = int(os.getenv('PORT', 8000))
+            logger.info(f"🌐 Dashboard running on http://0.0.0.0:{port}")
+            logger.info(f"🌐 Access it at: http://127.0.0.1:{port}")
+            self.web_server.run_async(port=port)
 
             await self.main_loop()
         except KeyboardInterrupt:
