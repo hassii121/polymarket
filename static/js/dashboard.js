@@ -135,6 +135,7 @@ async function refreshAllData() {
             fetchWindowInfo(),
             fetchPendingOrder(),
             fetchTrades(),
+            fetchBTCPrice(),
         ]);
 
         updateUI();
@@ -202,10 +203,22 @@ async function fetchTrades() {
     }
 }
 
+async function fetchBTCPrice() {
+    try {
+        const response = await fetch('/api/btc/price');
+        const data = await response.json();
+        state.btcPrice = data.current_price;
+        state.btcChange24h = data.change_24h;
+    } catch (error) {
+        console.error('Error fetching BTC price:', error);
+    }
+}
+
 // ============================================
 // UI UPDATE
 // ============================================
 function updateUI() {
+    updateBTCPrice();
     updateCandleChart();
     updateSignal();
     updateWindow();
@@ -213,6 +226,23 @@ function updateUI() {
     updatePendingOrder();
     updateTradesTable();
     updatePnLChart();
+}
+
+function updateBTCPrice() {
+    if (!state.btcPrice) return;
+
+    const priceEl = document.getElementById('btcPrice');
+    const changeEl = document.getElementById('btcChange');
+
+    if (priceEl) {
+        priceEl.textContent = `$${state.btcPrice.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    }
+
+    if (changeEl && state.btcChange24h) {
+        const change = state.btcChange24h.change_pct || 0;
+        changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        changeEl.style.color = change >= 0 ? '#10B981' : '#EF4444';
+    }
 }
 
 function updateCandleChart() {
